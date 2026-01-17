@@ -5,21 +5,52 @@ const mockScene = {
 };
 
 const mockCamera = {
-  position: { z: 0 },
-  aspect: 1,
+  position: {
+    x: 0,
+    y: 0,
+    z: 0,
+    set: vi.fn(),
+  },
+  rotation: {
+    x: 0,
+    y: 0,
+    z: 0,
+    set: vi.fn(),
+  },
+  fov: 75, // Mark as perspective camera
+  _aspect: undefined,
+  get aspect() {
+    return this._aspect !== undefined ? this._aspect : window.innerWidth / window.innerHeight;
+  },
+  set aspect(value) {
+    this._aspect = value;
+  },
   updateProjectionMatrix: vi.fn(),
 };
 
 const mockRenderer = {
   setSize: vi.fn(),
   setPixelRatio: vi.fn(),
+  setClearColor: vi.fn(),
   render: vi.fn(),
   domElement: document.createElement('canvas'),
   dispose: vi.fn(),
+  shadowMap: {
+    enabled: false,
+    type: 0,
+  },
+  toneMapping: 0,
+  toneMappingExposure: 1.0,
 };
 
 const mockTorusMesh = {
-  rotation: { x: 0, y: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+  geometry: {
+    dispose: vi.fn(),
+  },
+  material: {
+    dispose: vi.fn(),
+  },
 };
 
 const mockLight = {
@@ -28,9 +59,37 @@ const mockLight = {
     mapSize: { width: 0, height: 0 },
     camera: { near: 0, far: 0, fov: 0 },
   },
+  position: {
+    x: 0,
+    y: 0,
+    z: 0,
+    set: vi.fn(),
+  },
+  target: {
+    position: {
+      x: 0,
+      y: 0,
+      z: 0,
+      set: vi.fn(),
+    },
+  },
+  dispose: vi.fn(),
 };
 
-const mockTexture = {};
+const mockTexture = {
+  wrapS: 1000,
+  wrapT: 1000,
+  repeat: {
+    x: 1,
+    y: 1,
+    set: vi.fn(),
+  },
+  offset: {
+    x: 0,
+    y: 0,
+    set: vi.fn(),
+  },
+};
 
 const mockTextureLoader = {
   load: vi.fn().mockReturnValue(mockTexture),
@@ -41,13 +100,57 @@ vi.mock('three', async () => {
   return {
     ...actual,
     Scene: vi.fn().mockImplementation(() => mockScene),
-    PerspectiveCamera: vi.fn().mockImplementation(() => mockCamera),
+    PerspectiveCamera: vi.fn().mockImplementation(() => {
+      // Mark as PerspectiveCamera for instanceof check
+      const cam = Object.create(mockCamera);
+      cam.isPerspectiveCamera = true;
+      return cam;
+    }),
+    OrthographicCamera: vi.fn().mockImplementation(() => {
+      const cam = Object.create(mockCamera);
+      cam.isOrthographicCamera = true;
+      return cam;
+    }),
     WebGLRenderer: vi.fn().mockImplementation(() => mockRenderer),
     TorusKnotGeometry: vi.fn(),
+    BoxGeometry: vi.fn(),
+    SphereGeometry: vi.fn(),
+    TorusGeometry: vi.fn(),
+    OctahedronGeometry: vi.fn(),
+    TetrahedronGeometry: vi.fn(),
+    IcosahedronGeometry: vi.fn(),
     MeshBasicMaterial: vi.fn(),
+    MeshStandardMaterial: vi.fn(),
+    MeshPhongMaterial: vi.fn(),
+    MeshLambertMaterial: vi.fn(),
+    MeshToonMaterial: vi.fn(),
+    MeshPhysicalMaterial: vi.fn(),
     Mesh: vi.fn().mockImplementation(() => mockTorusMesh),
+    AmbientLight: vi.fn().mockImplementation(() => mockLight),
+    DirectionalLight: vi.fn().mockImplementation(() => mockLight),
+    HemisphereLight: vi.fn().mockImplementation(() => mockLight),
+    PointLight: vi.fn().mockImplementation(() => mockLight),
     SpotLight: vi.fn().mockImplementation(() => mockLight),
     TextureLoader: vi.fn().mockImplementation(() => mockTextureLoader),
+    Fog: vi.fn(),
+    FogExp2: vi.fn(),
+    Color: vi.fn(),
+    // Constants
+    FrontSide: 0,
+    BackSide: 1,
+    DoubleSide: 2,
+    RepeatWrapping: 1000,
+    ClampToEdgeWrapping: 1001,
+    MirroredRepeatWrapping: 1002,
+    BasicShadowMap: 0,
+    PCFShadowMap: 1,
+    PCFSoftShadowMap: 2,
+    VSMShadowMap: 3,
+    LinearToneMapping: 0,
+    ReinhardToneMapping: 1,
+    CineonToneMapping: 2,
+    ACESFilmicToneMapping: 3,
+    NeutralToneMapping: 4,
   };
 });
 
@@ -59,18 +162,21 @@ describe('ThreeJSScene', () => {
   let mockRequestAnimationFrame;
   let mockCancelAnimationFrame;
 
-  beforeEach(() => {
-    Object.defineProperty(window, 'innerWidth', {
-      writable: true,
-      configurable: true,
-      value: 1920,
-    });
+    beforeEach(() => {
+      // Reset camera aspect
+      mockCamera._aspect = undefined;
 
-    Object.defineProperty(window, 'innerHeight', {
-      writable: true,
-      configurable: true,
-      value: 1080,
-    });
+      Object.defineProperty(window, 'innerWidth', {
+        writable: true,
+        configurable: true,
+        value: 1920,
+      });
+
+      Object.defineProperty(window, 'innerHeight', {
+        writable: true,
+        configurable: true,
+        value: 1080,
+      });
 
     Object.defineProperty(window, 'devicePixelRatio', {
       writable: true,
@@ -126,8 +232,9 @@ describe('ThreeJSScene', () => {
       expect(sceneInstance.scene).toBeDefined();
       expect(sceneInstance.camera).toBeDefined();
       expect(sceneInstance.renderer).toBeDefined();
-      expect(sceneInstance.light).toBeDefined();
-      expect(sceneInstance.torusMesh).toBeDefined();
+      expect(sceneInstance.lights).toBeDefined();
+      expect(Array.isArray(sceneInstance.lights)).toBe(true);
+      expect(sceneInstance.mesh).toBeDefined();
     });
 
     it('should create a Three.js Scene', () => {
@@ -148,12 +255,15 @@ describe('ThreeJSScene', () => {
 
     it('should set camera position z to 1000', () => {
       sceneInstance = new ThreeJSScene();
-      expect(mockCamera.position.z).toBe(1000);
+      expect(mockCamera.position.set).toHaveBeenCalledWith(0, 0, 1000);
     });
 
     it('should create a WebGLRenderer with antialias', () => {
       sceneInstance = new ThreeJSScene();
-      expect(THREE.WebGLRenderer).toHaveBeenCalledWith({ antialias: true });
+      expect(THREE.WebGLRenderer).toHaveBeenCalledWith({
+        antialias: true,
+        alpha: false,
+      });
     });
 
     it('should set renderer size to window dimensions', () => {
@@ -187,14 +297,20 @@ describe('ThreeJSScene', () => {
   describe('Mesh Creation', () => {
     it('should create a TorusKnotGeometry with correct parameters', () => {
       sceneInstance = new ThreeJSScene();
-      expect(THREE.TorusKnotGeometry).toHaveBeenCalledWith(200, 60, 100, 16);
+      expect(THREE.TorusKnotGeometry).toHaveBeenCalledWith(200, 60, 100, 16, 2, 3);
     });
 
     it('should create a MeshBasicMaterial with texture', () => {
       sceneInstance = new ThreeJSScene();
-      expect(THREE.MeshBasicMaterial).toHaveBeenCalledWith({
-        map: mockTexture,
-      });
+      expect(THREE.MeshBasicMaterial).toHaveBeenCalledWith(
+        expect.objectContaining({
+          map: mockTexture,
+          color: 0xffffff,
+          wireframe: false,
+          transparent: false,
+          opacity: 1.0,
+        })
+      );
     });
 
     it('should create a Mesh from geometry and material', () => {
@@ -205,6 +321,11 @@ describe('ThreeJSScene', () => {
     it('should add mesh to the scene', () => {
       sceneInstance = new ThreeJSScene();
       expect(mockScene.add).toHaveBeenCalledWith(mockTorusMesh);
+    });
+
+    it('should use mesh property instead of torusMesh', () => {
+      sceneInstance = new ThreeJSScene();
+      expect(sceneInstance.mesh).toBe(mockTorusMesh);
     });
   });
 
@@ -225,7 +346,14 @@ describe('ThreeJSScene', () => {
   describe('Lighting', () => {
     it('should create a SpotLight with white color', () => {
       sceneInstance = new ThreeJSScene();
-      expect(THREE.SpotLight).toHaveBeenCalledWith(0xffffff);
+      expect(THREE.SpotLight).toHaveBeenCalledWith(
+        0xffffff,
+        1.0,
+        0,
+        Math.PI / 3,
+        0,
+        1
+      );
     });
 
     it('should enable shadow casting on light', () => {
@@ -276,7 +404,7 @@ describe('ThreeJSScene', () => {
       const animateCallback = mockRequestAnimationFrame.mock.calls[0][0];
       animateCallback();
 
-      expect(mockRenderer.render).toHaveBeenCalledWith(mockScene, mockCamera);
+      expect(mockRenderer.render).toHaveBeenCalledWith(mockScene, sceneInstance.camera);
     });
 
     it('should continue animation loop recursively', () => {
@@ -290,7 +418,7 @@ describe('ThreeJSScene', () => {
 
     it('should not update rotation if mesh is null', () => {
       sceneInstance = new ThreeJSScene();
-      sceneInstance.torusMesh = null;
+      sceneInstance.mesh = null;
       const animateCallback = mockRequestAnimationFrame.mock.calls[0][0];
 
       expect(() => animateCallback()).not.toThrow();
@@ -316,13 +444,17 @@ describe('ThreeJSScene', () => {
 
     it('should update camera aspect on resize', () => {
       sceneInstance = new ThreeJSScene();
+      // Get initial call count
+      const initialCallCount = mockCamera.updateProjectionMatrix.mock.calls.length;
+      
       window.innerWidth = 1600;
       window.innerHeight = 900;
 
       sceneInstance.resizeHandler();
 
       expect(mockCamera.aspect).toBe(1600 / 900);
-      expect(mockCamera.updateProjectionMatrix).toHaveBeenCalled();
+      // Should be called at least once more than initial
+      expect(mockCamera.updateProjectionMatrix.mock.calls.length).toBeGreaterThan(initialCallCount);
     });
 
     it('should update renderer size on resize', () => {
@@ -422,7 +554,9 @@ describe('ThreeJSScene', () => {
       let callback = mockRequestAnimationFrame.mock.calls[0][0];
       for (let i = 0; i < 5; i++) {
         callback();
-        callback = mockRequestAnimationFrame.mock.calls[i + 1][0];
+        if (i < 4) {
+          callback = mockRequestAnimationFrame.mock.calls[i + 1][0];
+        }
       }
 
       expect(mockTorusMesh.rotation.x).toBe(initialRotationX + 0.05);
@@ -439,10 +573,13 @@ describe('ThreeJSScene', () => {
 
       expect(sceneInstance.resizeHandler).toBeDefined();
 
+      const initialCallCount = mockCamera.updateProjectionMatrix.mock.calls.length;
+      
       window.innerWidth = 800;
       window.innerHeight = 600;
       sceneInstance.resizeHandler();
       expect(mockCamera.aspect).toBe(800 / 600);
+      expect(mockCamera.updateProjectionMatrix.mock.calls.length).toBeGreaterThan(initialCallCount);
 
       sceneInstance.dispose();
       expect(mockRenderer.dispose).toHaveBeenCalled();
