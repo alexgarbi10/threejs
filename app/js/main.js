@@ -17,6 +17,7 @@ class ThreeJSScene {
     this.animationId = null;
     this.textureLoader = new THREE.TextureLoader();
     this.gltfLoader = new GLTFLoader();
+    this.loadingVersion = 0;  // Track loading version to invalidate stale callbacks
 
     this.init();
     if (this.config.animation.enabled) {
@@ -309,6 +310,10 @@ class ThreeJSScene {
   createBrainGeometry() {
     const brainConfig = this.config.geometry.brain;
     
+    // Increment loading version to invalidate any pending callbacks
+    this.loadingVersion++;
+    const currentVersion = this.loadingVersion;
+    
     // Create a group to hold the brain model and labels
     this.brainGroup = new THREE.Group();
     this.scene.add(this.brainGroup);
@@ -317,6 +322,12 @@ class ThreeJSScene {
     this.gltfLoader.load(
       brainConfig.modelUrl,
       (gltf) => {
+        // Check if this callback is stale (updateConfig was called during loading)
+        if (currentVersion !== this.loadingVersion) {
+          console.log('Ignoring stale GLTF load callback');
+          return;
+        }
+        
         const model = gltf.scene;
         
         // Calculate bounding box to center and scale the model
@@ -355,15 +366,21 @@ class ThreeJSScene {
         
         // Create labels for brain regions
         if (brainConfig.showLabels) {
-          this.createBrainLabels(brainConfig.regions, scale);
+          this.createBrainLabels(brainConfig.regions);
         }
       },
       (progress) => {
-        // Loading progress
-        const percent = (progress.loaded / progress.total) * 100;
-        console.log(`Loading brain model: ${percent.toFixed(1)}%`);
+        // Loading progress (handle case where total is 0 or undefined)
+        if (progress.total && progress.total > 0) {
+          const percent = (progress.loaded / progress.total) * 100;
+          console.log(`Loading brain model: ${percent.toFixed(1)}%`);
+        }
       },
       (error) => {
+        // Check if this callback is stale
+        if (currentVersion !== this.loadingVersion) {
+          return;
+        }
         console.error('Error loading brain model:', error);
         // Create a fallback brain-like shape if model fails to load
         this.createFallbackBrain();
@@ -626,13 +643,13 @@ class ThreeJSScene {
     
     // Create labels
     if (brainConfig.showLabels) {
-      this.createBrainLabels(brainConfig.regions, 1);
+      this.createBrainLabels(brainConfig.regions);
     }
     
     console.log('Displaying anatomical brain model');
   }
 
-  createBrainLabels(regions, modelScale = 1) {
+  createBrainLabels(regions) {
     // Initialize CSS2D renderer if not already done
     if (!this.labelRenderer) {
       this.labelRenderer = new CSS2DRenderer();
