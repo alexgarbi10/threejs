@@ -67,6 +67,28 @@ export const sceneConfig = {
       radius: 100,
       detail: 0,
     },
+    
+    // Brain specific parameters
+    brain: {
+      modelUrl: '/models/brain.glb',  // Path to GLTF model
+      scale: 100,  // Scale factor for the model
+      regions: [
+        { name: 'Frontal Lobe', position: { x: 0, y: 50, z: 40 }, description: 'Executive functions, reasoning, planning' },
+        { name: 'Parietal Lobe', position: { x: 0, y: 60, z: -30 }, description: 'Sensory processing, spatial awareness' },
+        { name: 'Temporal Lobe', position: { x: 70, y: -10, z: 0 }, description: 'Hearing, language, memory' },
+        { name: 'Occipital Lobe', position: { x: 0, y: 20, z: -70 }, description: 'Visual processing' },
+        { name: 'Cerebellum', position: { x: 0, y: -50, z: -50 }, description: 'Motor control, balance, coordination' },
+        { name: 'Brainstem', position: { x: 0, y: -70, z: 0 }, description: 'Vital functions, breathing, heart rate' },
+        { name: 'Hippocampus', position: { x: 40, y: -20, z: 20 }, description: 'Memory formation, learning' },
+        { name: 'Hypothalamus', position: { x: 0, y: -15, z: 30 }, description: 'Hormones, homeostasis, hunger' },
+        { name: 'Thalamus', position: { x: 0, y: 5, z: 10 }, description: 'Sensory relay station' },
+        { name: 'Corpus Callosum', position: { x: 0, y: 30, z: 0 }, description: 'Connects left and right hemispheres' },
+        { name: 'Amygdala', position: { x: 35, y: -25, z: 25 }, description: 'Emotions, fear response' },
+        { name: 'Motor Cortex', position: { x: 0, y: 70, z: 10 }, description: 'Voluntary movement control' },
+      ],
+      showLabels: true,
+      labelStyle: 'floating',  // 'floating' or 'pointer'
+    },
   },
 
   // Material Configuration
