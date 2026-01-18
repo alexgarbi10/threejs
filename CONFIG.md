@@ -1,210 +1,251 @@
 # Configuration Guide
 
-This project uses a comprehensive configuration system that allows you to control every aspect of the Three.js scene through the `app/js/config.js` file.
+This project uses a comprehensive configuration system that allows you to control every aspect of the 3D brain visualization through the `app/js/config.js` file.
 
 ## Quick Start
 
 Edit `app/js/config.js` to customize your scene. All changes take effect when you reload the page.
 
-## Configuration Options
+## Brain Configuration
 
-### Geometry
-
-Change the 3D shape being displayed:
+The brain visualization is the primary feature. Configure it in the `geometry` section:
 
 ```javascript
 geometry: {
-  type: 'torusKnot', // Options: 'torusKnot', 'box', 'sphere', 'torus', 'octahedron', 'tetrahedron', 'icosahedron'
+  type: 'brain',  // Set to 'brain' for brain visualization
   enabled: true,
   
-  torusKnot: {
-    radius: 200,
-    tube: 60,
-    tubularSegments: 100,
-    radialSegments: 16,
-    p: 2,
-    q: 3,
+  brain: {
+    modelUrl: '/models/brain.glb',  // Path to GLTF model (optional)
+    scale: 200,                      // Size of the brain
+    showLabels: true,                // Show/hide anatomical labels
+    labelStyle: 'floating',          // Label display style
+    
+    regions: [
+      { 
+        name: 'Frontal Lobe', 
+        position: { x: 0, y: 180, z: 280 }, 
+        description: 'Planning, decision-making, personality' 
+      },
+      // ... more regions
+    ],
   },
 }
 ```
 
-### Material
+### Brain Regions
 
-Control the appearance and material type:
+The default configuration includes 13 anatomically accurate brain regions:
+
+| Region | Function | Position (x, y, z) |
+|--------|----------|-------------------|
+| Frontal Lobe | Planning, decision-making, speech | (0, 180, 280) |
+| Parietal Lobe | Sensory integration, spatial awareness | (0, 250, -100) |
+| Temporal Lobe | Hearing, language, memory | (-300, -50, 60) |
+| Occipital Lobe | Visual processing | (0, 100, -280) |
+| Motor Cortex | Voluntary movement | (220, 200, 40) |
+| Sensory Cortex | Touch, pain, proprioception | (240, 180, -60) |
+| Cerebellum | Coordination, balance | (0, -160, -250) |
+| Brainstem | Vital autonomic functions | (180, -180, -40) |
+| Thalamus | Sensory relay hub | (-250, 30, 40) |
+| Hypothalamus | Homeostasis, circadian rhythms | (-250, -80, 100) |
+| Hippocampus | Memory, spatial navigation | (-280, -60, 20) |
+| Amygdala | Emotions, fear response | (-280, -50, 120) |
+| Corpus Callosum | Connects hemispheres | (-260, 120, 0) |
+
+### Adding Custom Regions
+
+Add new brain regions by extending the `regions` array:
 
 ```javascript
-material: {
-  type: 'basic', // Options: 'basic', 'standard', 'phong', 'lambert', 'toon', 'physical'
-  enabled: true,
-  color: 0xffffff,
-  wireframe: false,
-  transparent: false,
-  opacity: 1.0,
-  
-  texture: {
-    enabled: true,
-    url: 'https://images.pexels.com/photos/235994/pexels-photo-235994.jpeg...',
-    // Or use local textures:
-    // url: '/textures/abstract.jpg',
-    // url: '/textures/floor.jpeg',
-    // url: '/textures/wood.jpeg',
+regions: [
+  // ... existing regions
+  { 
+    name: 'Prefrontal Cortex', 
+    position: { x: 0, y: 150, z: 320 }, 
+    description: 'Executive functions, working memory' 
   },
+  { 
+    name: 'Wernicke\'s Area', 
+    position: { x: -280, y: 20, z: 80 }, 
+    description: 'Language comprehension' 
+  },
+]
+```
+
+### Label Positioning Tips
+
+Labels are positioned in 3D space. To adjust:
+
+- **x-axis**: Left (-) / Right (+)
+- **y-axis**: Down (-) / Up (+)
+- **z-axis**: Back (-) / Front (+)
+
+Move labels further from the brain by increasing absolute values (e.g., x: -300 instead of x: -150).
+
+## Using a GLTF Brain Model
+
+For more realistic visualization, load a 3D brain model:
+
+1. Download a brain model in GLTF/GLB format
+2. Place it in the `/models/` directory
+3. Update the config:
+
+```javascript
+brain: {
+  modelUrl: '/models/brain.glb',
+  scale: 200,  // Adjust based on model size
 }
 ```
 
-### Camera
+If no model is found, a procedural brain is displayed automatically.
 
-Switch between perspective and orthographic cameras:
+## Camera Configuration
+
+Position the camera to view the brain:
 
 ```javascript
 camera: {
-  type: 'perspective', // 'perspective' or 'orthographic'
-  position: { x: 0, y: 0, z: 1000 },
+  type: 'perspective',
+  position: { x: 0, y: 50, z: 800 },  // Distance from brain
   rotation: { x: 0, y: 0, z: 0 },
 }
 ```
 
-### Lighting
+## Lighting Configuration
 
-Enable/disable and configure multiple light types:
+The brain uses physical materials that require proper lighting:
 
 ```javascript
 lighting: {
-  ambient: { enabled: false, color: 0x404040, intensity: 0.5 },
-  directional: { enabled: false, ... },
-  hemisphere: { enabled: false, ... },
-  point: { enabled: false, ... },
-  spot: { enabled: true, ... }, // Currently active
+  enabled: true,
+  ambient: { enabled: true, color: 0x404040, intensity: 0.8 },
+  directional: { 
+    enabled: true, 
+    color: 0xffffff, 
+    intensity: 1.5,
+    position: { x: 100, y: 100, z: 100 },
+  },
 }
 ```
 
-### Animation
+## Animation Configuration
 
-Control rotation speed and direction:
+Control the brain rotation:
 
 ```javascript
 animation: {
   enabled: true,
   autoRotate: true,
-  rotation: { x: 0.01, y: 0.01, z: 0 },
-  speed: 1.0, // Multiplier for rotation speed
+  rotation: { x: 0.002, y: 0.005, z: 0 },  // Rotation speed per axis
+  speed: 1.0,  // Global speed multiplier
 }
 ```
 
-### Renderer
-
-Configure rendering quality and effects:
-
-```javascript
-renderer: {
-  antialias: true,
-  shadowMap: { enabled: true, type: 'pcf' },
-  toneMapping: 'aces',
-  toneMappingExposure: 1.0,
-}
-```
-
-## Examples
-
-### Example 1: Switch to a Box with Standard Material
-
-```javascript
-geometry: {
-  type: 'box',
-  box: { width: 200, height: 200, depth: 200 },
-}
-
-material: {
-  type: 'standard',
-  metalness: 0.8,
-  roughness: 0.2,
-}
-```
-
-### Example 2: Use Local Texture
-
-```javascript
-material: {
-  texture: {
-    enabled: true,
-    url: '/textures/wood.jpeg',
-  },
-}
-```
-
-### Example 3: Disable Animation
+### Stopping Rotation
 
 ```javascript
 animation: {
-  enabled: false,
+  autoRotate: false,  // Disable auto-rotation
 }
 ```
 
-### Example 4: Change to Orthographic Camera
+## Other Geometry Types
+
+The project also supports basic geometries (from original codebase):
 
 ```javascript
-camera: {
-  type: 'orthographic',
-  position: { x: 0, y: 0, z: 1000 },
-}
-```
-
-### Example 5: Multiple Lights
-
-```javascript
-lighting: {
-  ambient: { enabled: true, intensity: 0.3 },
-  directional: { enabled: true, position: { x: 5, y: 5, z: 5 } },
-  spot: { enabled: true },
+geometry: {
+  type: 'sphere',  // Options: 'torusKnot', 'box', 'sphere', 'torus', etc.
 }
 ```
 
 ## Runtime Configuration
 
-You can also update the configuration at runtime:
+Update the visualization at runtime:
 
 ```javascript
 import { ThreeJSScene } from './main.js';
 
 const scene = new ThreeJSScene();
 
-// Update configuration
+// Switch to brain view
 scene.updateConfig({
-  geometry: { type: 'sphere' },
+  geometry: { type: 'brain' },
+});
+
+// Change rotation speed
+scene.updateConfig({
   animation: { speed: 2.0 },
 });
 ```
 
-## Available Geometry Types
+## Label Styling
 
-- `torusKnot` - Complex twisted torus shape
-- `box` - Simple cube
-- `sphere` - Perfect sphere
-- `torus` - Donut shape
-- `octahedron` - 8-sided polyhedron
-- `tetrahedron` - 4-sided pyramid
-- `icosahedron` - 20-sided polyhedron
+Labels are styled via CSS in `app/css/main.css`:
 
-## Available Material Types
+```css
+.brain-label {
+  background: rgba(0, 20, 30, 0.75);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+}
 
-- `basic` - Simple, unlit material
-- `standard` - Physically-based rendering (PBR)
-- `phong` - Phong shading model
-- `lambert` - Lambertian shading
-- `toon` - Toon/cel shading
-- `physical` - Advanced PBR material
+.brain-label-name {
+  color: #00dddd;
+  font-weight: 600;
+  text-transform: uppercase;
+}
 
-## Available Shadow Map Types
+.brain-label-desc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 8px;
+}
+```
 
-- `basic` - Basic shadow map
-- `pcf` - Percentage Closer Filtering
-- `pcfSoft` - Soft shadows with PCF
-- `vsm` - Variance Shadow Maps
+## Complete Example
 
-## Available Tone Mapping
+Full brain configuration:
 
-- `linear` - Linear tone mapping
-- `reinhard` - Reinhard tone mapping
-- `cineon` - Cineon filmic curve
-- `aces` - ACES Filmic (recommended)
-- `neutral` - Neutral tone mapping
+```javascript
+export const sceneConfig = {
+  geometry: {
+    type: 'brain',
+    enabled: true,
+    brain: {
+      modelUrl: '/models/brain.glb',
+      scale: 200,
+      showLabels: true,
+      regions: [
+        { name: 'Frontal Lobe', position: { x: 0, y: 180, z: 280 }, description: 'Planning, decision-making' },
+        { name: 'Parietal Lobe', position: { x: 0, y: 250, z: -100 }, description: 'Sensory integration' },
+        // ... more regions
+      ],
+    },
+  },
+  
+  camera: {
+    type: 'perspective',
+    position: { x: 0, y: 50, z: 800 },
+  },
+  
+  lighting: {
+    enabled: true,
+    ambient: { enabled: true, intensity: 0.8 },
+    directional: { enabled: true, intensity: 1.5 },
+  },
+  
+  animation: {
+    enabled: true,
+    autoRotate: true,
+    rotation: { x: 0.002, y: 0.005, z: 0 },
+  },
+  
+  renderer: {
+    antialias: true,
+    toneMapping: 'aces',
+  },
+};
+```

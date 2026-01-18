@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import sceneConfig from './config.js';
 
 class ThreeJSScene {
@@ -7,10 +9,14 @@ class ThreeJSScene {
     this.scene = null;
     this.camera = null;
     this.renderer = null;
+    this.labelRenderer = null;
     this.lights = [];
     this.mesh = null;
+    this.brainGroup = null;
+    this.labels = [];
     this.animationId = null;
     this.textureLoader = new THREE.TextureLoader();
+    this.gltfLoader = new GLTFLoader();
 
     this.init();
     if (this.config.animation.enabled) {
@@ -169,6 +175,11 @@ class ThreeJSScene {
         geometry = new THREE.IcosahedronGeometry(radius, detail);
         break;
       }
+      case 'brain': {
+        // Brain uses GLTF loader, handle separately
+        this.createBrainGeometry();
+        return;
+      }
       default:
         console.warn(`Unknown geometry type: ${this.config.geometry.type}`);
         return;
@@ -293,6 +304,404 @@ class ThreeJSScene {
       default:
         return THREE.RepeatWrapping;
     }
+  }
+
+  createBrainGeometry() {
+    const brainConfig = this.config.geometry.brain;
+    
+    // Create a group to hold the brain model and labels
+    this.brainGroup = new THREE.Group();
+    this.scene.add(this.brainGroup);
+    
+    // Load the GLTF brain model
+    this.gltfLoader.load(
+      brainConfig.modelUrl,
+      (gltf) => {
+        const model = gltf.scene;
+        
+        // Calculate bounding box to center and scale the model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        // Center the model
+        model.position.sub(center);
+        
+        // Scale the model based on config
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = (brainConfig.scale * 2) / maxDim;
+        model.scale.setScalar(scale);
+        
+        // Apply anatomically accurate materials (based on Rita Carter's illustrations)
+        model.traverse((child) => {
+          if (child.isMesh) {
+            // Realistic gray matter color (grayish-pink cerebral cortex)
+            child.material = new THREE.MeshPhysicalMaterial({
+              color: 0xd4a59a,  // Anatomical cortex color
+              metalness: 0.0,
+              roughness: 0.85,
+              transparent: false,
+              side: THREE.DoubleSide,
+              clearcoat: 0.1,
+              clearcoatRoughness: 0.8,
+            });
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        
+        this.brainGroup.add(model);
+        this.mesh = this.brainGroup;
+        
+        // Create labels for brain regions
+        if (brainConfig.showLabels) {
+          this.createBrainLabels(brainConfig.regions, scale);
+        }
+      },
+      (progress) => {
+        // Loading progress
+        const percent = (progress.loaded / progress.total) * 100;
+        console.log(`Loading brain model: ${percent.toFixed(1)}%`);
+      },
+      (error) => {
+        console.error('Error loading brain model:', error);
+        // Create a fallback brain-like shape if model fails to load
+        this.createFallbackBrain();
+      }
+    );
+  }
+
+  createFallbackBrain() {
+    // Create a clean anatomical brain based on "The Human Brain Book" by Rita Carter
+    const brainConfig = this.config.geometry.brain;
+    const scale = brainConfig.scale;
+    
+    // Anatomical color palette
+    const cortexColor = 0xd4a59a;      // Grayish-pink cerebral cortex
+    const whiteMatteColor = 0xf5f0e8;  // White matter
+    const cerebellumColor = 0xc9a898;  // Cerebellum (slightly different tone)
+    const brainstemColor = 0xd4b0a0;   // Brainstem
+    
+    // Main cortex material
+    const cortexMaterial = new THREE.MeshPhysicalMaterial({
+      color: cortexColor,
+      metalness: 0.0,
+      roughness: 0.75,
+      clearcoat: 0.05,
+    });
+    
+    // === CEREBRAL HEMISPHERES ===
+    // Left hemisphere
+    const leftHemisphere = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.44, 64, 64, 0, Math.PI),
+      cortexMaterial
+    );
+    leftHemisphere.position.x = -scale * 0.02;
+    leftHemisphere.rotation.y = Math.PI / 2;
+    leftHemisphere.scale.set(1.0, 0.85, 1.15);
+    this.brainGroup.add(leftHemisphere);
+    
+    // Right hemisphere
+    const rightHemisphere = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.44, 64, 64, 0, Math.PI),
+      cortexMaterial
+    );
+    rightHemisphere.position.x = scale * 0.02;
+    rightHemisphere.rotation.y = -Math.PI / 2;
+    rightHemisphere.scale.set(1.0, 0.85, 1.15);
+    this.brainGroup.add(rightHemisphere);
+    
+    // === FRONTAL LOBE BULGE ===
+    const leftFrontal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.2, 32, 32),
+      cortexMaterial
+    );
+    leftFrontal.position.set(-scale * 0.14, scale * 0.08, scale * 0.38);
+    leftFrontal.scale.set(1.0, 0.85, 1.0);
+    this.brainGroup.add(leftFrontal);
+    
+    const rightFrontal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.2, 32, 32),
+      cortexMaterial
+    );
+    rightFrontal.position.set(scale * 0.14, scale * 0.08, scale * 0.38);
+    rightFrontal.scale.set(1.0, 0.85, 1.0);
+    this.brainGroup.add(rightFrontal);
+    
+    // === TEMPORAL LOBES ===
+    const leftTemporal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.16, 32, 32),
+      cortexMaterial
+    );
+    leftTemporal.position.set(-scale * 0.36, -scale * 0.12, scale * 0.15);
+    leftTemporal.scale.set(0.65, 0.75, 1.2);
+    this.brainGroup.add(leftTemporal);
+    
+    const rightTemporal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.16, 32, 32),
+      cortexMaterial
+    );
+    rightTemporal.position.set(scale * 0.36, -scale * 0.12, scale * 0.15);
+    rightTemporal.scale.set(0.65, 0.75, 1.2);
+    this.brainGroup.add(rightTemporal);
+    
+    // === CENTRAL FISSURE (longitudinal) ===
+    const fissureMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xb08878,
+      metalness: 0.0,
+      roughness: 0.95,
+    });
+    
+    const centralFissure = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.015, scale * 0.5, scale * 0.85),
+      fissureMaterial
+    );
+    centralFissure.position.set(0, scale * 0.12, 0);
+    this.brainGroup.add(centralFissure);
+    
+    // === LATERAL FISSURES (Sylvian) ===
+    const leftLateral = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.22, scale * 0.012, scale * 0.35),
+      fissureMaterial
+    );
+    leftLateral.position.set(-scale * 0.25, scale * 0.0, scale * 0.12);
+    leftLateral.rotation.z = -0.25;
+    leftLateral.rotation.y = 0.15;
+    this.brainGroup.add(leftLateral);
+    
+    const rightLateral = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.22, scale * 0.012, scale * 0.35),
+      fissureMaterial
+    );
+    rightLateral.position.set(scale * 0.25, scale * 0.0, scale * 0.12);
+    rightLateral.rotation.z = 0.25;
+    rightLateral.rotation.y = -0.15;
+    this.brainGroup.add(rightLateral);
+    
+    // === CEREBELLUM ===
+    const cerebellumMaterial = new THREE.MeshPhysicalMaterial({
+      color: cerebellumColor,
+      metalness: 0.0,
+      roughness: 0.85,
+    });
+    
+    // Main cerebellum body
+    const cerebellum = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.2, 32, 32),
+      cerebellumMaterial
+    );
+    cerebellum.position.set(0, -scale * 0.25, -scale * 0.35);
+    cerebellum.scale.set(1.5, 0.7, 0.9);
+    this.brainGroup.add(cerebellum);
+    
+    // Cerebellar ridges (folia) - simplified
+    const ridgeMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xb09080,
+      metalness: 0.0,
+      roughness: 0.9,
+    });
+    
+    for (let i = 0; i < 4; i++) {
+      const ridge = new THREE.Mesh(
+        new THREE.TorusGeometry(scale * 0.16, scale * 0.006, 8, 24, Math.PI),
+        ridgeMaterial
+      );
+      ridge.position.set(0, -scale * 0.2 - i * scale * 0.03, -scale * 0.35);
+      ridge.rotation.x = Math.PI / 2;
+      ridge.scale.set(1.4, 1, 0.8);
+      this.brainGroup.add(ridge);
+    }
+    
+    // === BRAINSTEM ===
+    const brainstemMaterial = new THREE.MeshPhysicalMaterial({
+      color: brainstemColor,
+      metalness: 0.0,
+      roughness: 0.8,
+    });
+    
+    // Pons (bulge)
+    const pons = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.07, 24, 24),
+      brainstemMaterial
+    );
+    pons.position.set(0, -scale * 0.38, -scale * 0.1);
+    pons.scale.set(1.0, 0.65, 1.1);
+    this.brainGroup.add(pons);
+    
+    // Medulla (tapers down)
+    const medulla = new THREE.Mesh(
+      new THREE.CylinderGeometry(scale * 0.035, scale * 0.05, scale * 0.18, 16),
+      brainstemMaterial
+    );
+    medulla.position.set(0, -scale * 0.5, -scale * 0.06);
+    medulla.rotation.x = 0.15;
+    this.brainGroup.add(medulla);
+    
+    // === CORPUS CALLOSUM (white matter bridge) ===
+    const corpusCallosum = new THREE.Mesh(
+      new THREE.TorusGeometry(scale * 0.18, scale * 0.03, 12, 24, Math.PI),
+      new THREE.MeshPhysicalMaterial({
+        color: whiteMatteColor,
+        metalness: 0.0,
+        roughness: 0.5,
+      })
+    );
+    corpusCallosum.position.set(0, scale * 0.08, 0);
+    corpusCallosum.rotation.y = Math.PI / 2;
+    corpusCallosum.rotation.x = Math.PI;
+    corpusCallosum.scale.set(0.75, 1, 1.1);
+    this.brainGroup.add(corpusCallosum);
+    
+    // === DEEP STRUCTURES (subtle, semi-transparent) ===
+    const deepMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xd49888,
+      metalness: 0.0,
+      roughness: 0.7,
+      transparent: true,
+      opacity: 0.5,
+    });
+    
+    // Thalamus
+    const thalamus = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.07, 20, 20),
+      deepMaterial
+    );
+    thalamus.position.set(0, -scale * 0.05, 0);
+    thalamus.scale.set(1.4, 0.9, 1.1);
+    this.brainGroup.add(thalamus);
+    
+    // Hypothalamus
+    const hypothalamus = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.035, 16, 16),
+      deepMaterial
+    );
+    hypothalamus.position.set(0, -scale * 0.16, scale * 0.06);
+    this.brainGroup.add(hypothalamus);
+    
+    // Hippocampus (bilateral)
+    const hippoMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xd4a090,
+      metalness: 0.0,
+      roughness: 0.7,
+      transparent: true,
+      opacity: 0.55,
+    });
+    
+    const leftHippo = new THREE.Mesh(
+      new THREE.CapsuleGeometry(scale * 0.02, scale * 0.08, 6, 12),
+      hippoMaterial
+    );
+    leftHippo.position.set(-scale * 0.1, -scale * 0.13, scale * 0.02);
+    leftHippo.rotation.z = 0.4;
+    leftHippo.rotation.y = 0.25;
+    this.brainGroup.add(leftHippo);
+    
+    const rightHippo = new THREE.Mesh(
+      new THREE.CapsuleGeometry(scale * 0.02, scale * 0.08, 6, 12),
+      hippoMaterial
+    );
+    rightHippo.position.set(scale * 0.1, -scale * 0.13, scale * 0.02);
+    rightHippo.rotation.z = -0.4;
+    rightHippo.rotation.y = -0.25;
+    this.brainGroup.add(rightHippo);
+    
+    // Amygdala (bilateral)
+    const leftAmygdala = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.025, 12, 12),
+      hippoMaterial
+    );
+    leftAmygdala.position.set(-scale * 0.15, -scale * 0.1, scale * 0.1);
+    leftAmygdala.scale.set(0.8, 1.1, 0.9);
+    this.brainGroup.add(leftAmygdala);
+    
+    const rightAmygdala = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.025, 12, 12),
+      hippoMaterial
+    );
+    rightAmygdala.position.set(scale * 0.15, -scale * 0.1, scale * 0.1);
+    rightAmygdala.scale.set(0.8, 1.1, 0.9);
+    this.brainGroup.add(rightAmygdala);
+    
+    this.mesh = this.brainGroup;
+    
+    // Create labels
+    if (brainConfig.showLabels) {
+      this.createBrainLabels(brainConfig.regions, 1);
+    }
+    
+    console.log('Displaying anatomical brain model');
+  }
+
+  createBrainLabels(regions, modelScale = 1) {
+    // Initialize CSS2D renderer if not already done
+    if (!this.labelRenderer) {
+      this.labelRenderer = new CSS2DRenderer();
+      this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      this.labelRenderer.domElement.style.position = 'absolute';
+      this.labelRenderer.domElement.style.top = '0';
+      this.labelRenderer.domElement.style.left = '0';
+      this.labelRenderer.domElement.style.pointerEvents = 'none';
+      
+      const app = document.getElementById('app');
+      if (app) {
+        app.appendChild(this.labelRenderer.domElement);
+      } else {
+        document.body.appendChild(this.labelRenderer.domElement);
+      }
+    }
+    
+    // Create labels for each brain region
+    regions.forEach((region) => {
+      // Create label element
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'brain-label';
+      labelDiv.innerHTML = `
+        <span class="brain-label-name">${region.name}</span>
+        <span class="brain-label-desc">${region.description}</span>
+      `;
+      
+      // Create CSS2D object
+      const label = new CSS2DObject(labelDiv);
+      label.position.set(
+        region.position.x,
+        region.position.y,
+        region.position.z
+      );
+      
+      this.brainGroup.add(label);
+      this.labels.push(label);
+      
+      // Create a small sphere marker on the brain surface
+      const markerGeometry = new THREE.SphereGeometry(5, 16, 16);
+      const markerMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00cccc,
+        transparent: true,
+        opacity: 0.85,
+      });
+      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+      
+      // Position marker at ~25% toward label (on brain surface)
+      const markerPos = {
+        x: region.position.x * 0.25,
+        y: region.position.y * 0.25,
+        z: region.position.z * 0.25
+      };
+      marker.position.set(markerPos.x, markerPos.y, markerPos.z);
+      this.brainGroup.add(marker);
+      
+      // Create a thin line from marker to label
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(markerPos.x, markerPos.y, markerPos.z),
+        new THREE.Vector3(region.position.x, region.position.y, region.position.z)
+      ]);
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x00aaaa,
+        transparent: true,
+        opacity: 0.35,
+      });
+      const line = new THREE.Line(lineGeometry, lineMaterial);
+      this.brainGroup.add(line);
+    });
   }
 
   createLights() {
@@ -455,6 +864,11 @@ class ThreeJSScene {
 
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera);
+      
+      // Render CSS2D labels if present
+      if (this.labelRenderer) {
+        this.labelRenderer.render(this.scene, this.camera);
+      }
     }
   }
 
@@ -478,6 +892,11 @@ class ThreeJSScene {
           this.camera.updateProjectionMatrix();
         }
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // Resize CSS2D renderer if present
+        if (this.labelRenderer) {
+          this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
       }
     };
     window.addEventListener('resize', this.resizeHandler);
@@ -510,6 +929,33 @@ class ThreeJSScene {
           this.mesh.material.dispose();
         }
       }
+    }
+
+    // Dispose brain group and labels
+    if (this.brainGroup) {
+      this.brainGroup.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach((mat) => mat.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      });
+    }
+
+    // Remove CSS2D labels
+    this.labels.forEach((label) => {
+      if (label.element && label.element.parentNode) {
+        label.element.parentNode.removeChild(label.element);
+      }
+    });
+    this.labels = [];
+
+    // Dispose label renderer
+    if (this.labelRenderer && this.labelRenderer.domElement.parentNode) {
+      this.labelRenderer.domElement.parentNode.removeChild(this.labelRenderer.domElement);
     }
 
     // Dispose renderer
