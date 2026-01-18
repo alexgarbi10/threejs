@@ -324,7 +324,24 @@ class ThreeJSScene {
       (gltf) => {
         // Check if this callback is stale (updateConfig was called during loading)
         if (currentVersion !== this.loadingVersion) {
-          console.log('Ignoring stale GLTF load callback');
+          console.log('Disposing stale GLTF model to prevent memory leak');
+          // Dispose the loaded model to free GPU resources
+          gltf.scene.traverse((child) => {
+            if (child.isMesh) {
+              if (child.geometry) {
+                child.geometry.dispose();
+              }
+              if (child.material) {
+                if (Array.isArray(child.material)) {
+                  child.material.forEach((mat) => {
+                    this.disposeMaterial(mat);
+                  });
+                } else {
+                  this.disposeMaterial(child.material);
+                }
+              }
+            }
+          });
           return;
         }
         
@@ -917,6 +934,27 @@ class ThreeJSScene {
       }
     };
     window.addEventListener('resize', this.resizeHandler);
+  }
+
+  // Helper to dispose a material and its textures
+  disposeMaterial(material) {
+    if (!material) return;
+    
+    // Dispose all texture maps
+    const textureProperties = [
+      'map', 'lightMap', 'bumpMap', 'normalMap', 'specularMap',
+      'envMap', 'alphaMap', 'aoMap', 'displacementMap', 'emissiveMap',
+      'gradientMap', 'metalnessMap', 'roughnessMap', 'clearcoatMap',
+      'clearcoatNormalMap', 'clearcoatRoughnessMap'
+    ];
+    
+    textureProperties.forEach((prop) => {
+      if (material[prop]) {
+        material[prop].dispose();
+      }
+    });
+    
+    material.dispose();
   }
 
   dispose() {
