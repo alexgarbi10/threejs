@@ -406,255 +406,412 @@ class ThreeJSScene {
   }
 
   createFallbackBrain() {
-    // Create a clean anatomical brain based on "The Human Brain Book" by Rita Carter
+    // Color-coded anatomical brain inspired by "The Human Brain Book" by Rita Carter
+    // Uses functional color mapping for different brain regions
     const brainConfig = this.config.geometry.brain;
     const scale = brainConfig.scale;
     
-    // Anatomical color palette
-    const cortexColor = 0xd4a59a;      // Grayish-pink cerebral cortex
-    const whiteMatteColor = 0xf5f0e8;  // White matter
-    const cerebellumColor = 0xc9a898;  // Cerebellum (slightly different tone)
-    const brainstemColor = 0xd4b0a0;   // Brainstem
+    // === COLOR PALETTE (functional regions) ===
+    // Based on common neuroscience visualization conventions
+    const colors = {
+      frontalLobe: 0x6B8DD6,      // Blue - executive functions, planning
+      parietalLobe: 0xE8D44D,     // Yellow - sensory processing
+      temporalLobe: 0x7BC47F,     // Green - hearing, language, memory
+      occipitalLobe: 0xE07B7B,    // Red/Pink - visual processing
+      motorCortex: 0xF5A623,      // Orange - movement control
+      sensoryCortex: 0xF8E71C,    // Bright yellow - touch, proprioception
+      cerebellum: 0x9B8AA6,       // Purple - coordination
+      brainstem: 0xA8D5BA,        // Teal/Green - vital functions
+      limbic: 0xE89B9B,           // Salmon - emotions, memory
+      whiteMatters: 0xF5F0E8,      // Off-white - neural connections
+      basalGanglia: 0xC9A86C,     // Gold - movement regulation
+      fissure: 0x8B7355,          // Brown - sulci/grooves
+    };
     
-    // Main cortex material
-    const cortexMaterial = new THREE.MeshPhysicalMaterial({
-      color: cortexColor,
+    // Helper to create material
+    const makeMaterial = (color, opacity = 1.0) => new THREE.MeshPhysicalMaterial({
+      color,
       metalness: 0.0,
-      roughness: 0.75,
-      clearcoat: 0.05,
+      roughness: 0.7,
+      clearcoat: 0.1,
+      transparent: opacity < 1,
+      opacity,
     });
     
-    // === CEREBRAL HEMISPHERES ===
-    // Left hemisphere
-    const leftHemisphere = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.44, 64, 64, 0, Math.PI),
-      cortexMaterial
-    );
-    leftHemisphere.position.x = -scale * 0.02;
-    leftHemisphere.rotation.y = Math.PI / 2;
-    leftHemisphere.scale.set(1.0, 0.85, 1.15);
-    this.brainGroup.add(leftHemisphere);
+    // === FRONTAL LOBES (Blue) - Executive functions ===
+    const frontalMaterial = makeMaterial(colors.frontalLobe);
     
-    // Right hemisphere
-    const rightHemisphere = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.44, 64, 64, 0, Math.PI),
-      cortexMaterial
-    );
-    rightHemisphere.position.x = scale * 0.02;
-    rightHemisphere.rotation.y = -Math.PI / 2;
-    rightHemisphere.scale.set(1.0, 0.85, 1.15);
-    this.brainGroup.add(rightHemisphere);
-    
-    // === FRONTAL LOBE BULGE ===
+    // Left frontal lobe
     const leftFrontal = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.2, 32, 32),
-      cortexMaterial
+      new THREE.SphereGeometry(scale * 0.28, 32, 32),
+      frontalMaterial
     );
-    leftFrontal.position.set(-scale * 0.14, scale * 0.08, scale * 0.38);
-    leftFrontal.scale.set(1.0, 0.85, 1.0);
+    leftFrontal.position.set(-scale * 0.12, scale * 0.12, scale * 0.28);
+    leftFrontal.scale.set(0.9, 0.8, 1.1);
     this.brainGroup.add(leftFrontal);
     
+    // Right frontal lobe
     const rightFrontal = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.2, 32, 32),
-      cortexMaterial
+      new THREE.SphereGeometry(scale * 0.28, 32, 32),
+      frontalMaterial
     );
-    rightFrontal.position.set(scale * 0.14, scale * 0.08, scale * 0.38);
-    rightFrontal.scale.set(1.0, 0.85, 1.0);
+    rightFrontal.position.set(scale * 0.12, scale * 0.12, scale * 0.28);
+    rightFrontal.scale.set(0.9, 0.8, 1.1);
     this.brainGroup.add(rightFrontal);
     
-    // === TEMPORAL LOBES ===
-    const leftTemporal = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.16, 32, 32),
-      cortexMaterial
+    // Prefrontal cortex (front bulge)
+    const prefrontal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.15, 24, 24),
+      frontalMaterial
     );
-    leftTemporal.position.set(-scale * 0.36, -scale * 0.12, scale * 0.15);
-    leftTemporal.scale.set(0.65, 0.75, 1.2);
+    prefrontal.position.set(0, scale * 0.05, scale * 0.42);
+    prefrontal.scale.set(1.4, 0.8, 0.8);
+    this.brainGroup.add(prefrontal);
+    
+    // === PARIETAL LOBES (Yellow) - Sensory integration ===
+    const parietalMaterial = makeMaterial(colors.parietalLobe);
+    
+    const leftParietal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.24, 32, 32),
+      parietalMaterial
+    );
+    leftParietal.position.set(-scale * 0.14, scale * 0.22, -scale * 0.08);
+    leftParietal.scale.set(0.9, 0.75, 1.0);
+    this.brainGroup.add(leftParietal);
+    
+    const rightParietal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.24, 32, 32),
+      parietalMaterial
+    );
+    rightParietal.position.set(scale * 0.14, scale * 0.22, -scale * 0.08);
+    rightParietal.scale.set(0.9, 0.75, 1.0);
+    this.brainGroup.add(rightParietal);
+    
+    // === TEMPORAL LOBES (Green) - Hearing, language ===
+    const temporalMaterial = makeMaterial(colors.temporalLobe);
+    
+    const leftTemporal = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.18, 32, 32),
+      temporalMaterial
+    );
+    leftTemporal.position.set(-scale * 0.34, -scale * 0.08, scale * 0.12);
+    leftTemporal.scale.set(0.6, 0.7, 1.3);
     this.brainGroup.add(leftTemporal);
     
     const rightTemporal = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.16, 32, 32),
-      cortexMaterial
+      new THREE.SphereGeometry(scale * 0.18, 32, 32),
+      temporalMaterial
     );
-    rightTemporal.position.set(scale * 0.36, -scale * 0.12, scale * 0.15);
-    rightTemporal.scale.set(0.65, 0.75, 1.2);
+    rightTemporal.position.set(scale * 0.34, -scale * 0.08, scale * 0.12);
+    rightTemporal.scale.set(0.6, 0.7, 1.3);
     this.brainGroup.add(rightTemporal);
     
-    // === CENTRAL FISSURE (longitudinal) ===
-    const fissureMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xb08878,
-      metalness: 0.0,
-      roughness: 0.95,
-    });
+    // === OCCIPITAL LOBES (Red/Pink) - Vision ===
+    const occipitalMaterial = makeMaterial(colors.occipitalLobe);
     
-    const centralFissure = new THREE.Mesh(
-      new THREE.BoxGeometry(scale * 0.015, scale * 0.5, scale * 0.85),
+    const leftOccipital = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.18, 32, 32),
+      occipitalMaterial
+    );
+    leftOccipital.position.set(-scale * 0.1, scale * 0.08, -scale * 0.38);
+    leftOccipital.scale.set(1.0, 0.85, 0.8);
+    this.brainGroup.add(leftOccipital);
+    
+    const rightOccipital = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.18, 32, 32),
+      occipitalMaterial
+    );
+    rightOccipital.position.set(scale * 0.1, scale * 0.08, -scale * 0.38);
+    rightOccipital.scale.set(1.0, 0.85, 0.8);
+    this.brainGroup.add(rightOccipital);
+    
+    // === MOTOR CORTEX (Orange strip) - Movement ===
+    const motorMaterial = makeMaterial(colors.motorCortex);
+    
+    const leftMotor = new THREE.Mesh(
+      new THREE.CapsuleGeometry(scale * 0.035, scale * 0.22, 8, 16),
+      motorMaterial
+    );
+    leftMotor.position.set(-scale * 0.12, scale * 0.28, scale * 0.08);
+    leftMotor.rotation.x = Math.PI / 2;
+    leftMotor.rotation.z = 0.3;
+    this.brainGroup.add(leftMotor);
+    
+    const rightMotor = new THREE.Mesh(
+      new THREE.CapsuleGeometry(scale * 0.035, scale * 0.22, 8, 16),
+      motorMaterial
+    );
+    rightMotor.position.set(scale * 0.12, scale * 0.28, scale * 0.08);
+    rightMotor.rotation.x = Math.PI / 2;
+    rightMotor.rotation.z = -0.3;
+    this.brainGroup.add(rightMotor);
+    
+    // === SOMATOSENSORY CORTEX (Yellow strip) - Touch ===
+    const sensoryMaterial = makeMaterial(colors.sensoryCortex);
+    
+    const leftSensory = new THREE.Mesh(
+      new THREE.CapsuleGeometry(scale * 0.03, scale * 0.2, 8, 16),
+      sensoryMaterial
+    );
+    leftSensory.position.set(-scale * 0.14, scale * 0.26, -scale * 0.02);
+    leftSensory.rotation.x = Math.PI / 2;
+    leftSensory.rotation.z = 0.35;
+    this.brainGroup.add(leftSensory);
+    
+    const rightSensory = new THREE.Mesh(
+      new THREE.CapsuleGeometry(scale * 0.03, scale * 0.2, 8, 16),
+      sensoryMaterial
+    );
+    rightSensory.position.set(scale * 0.14, scale * 0.26, -scale * 0.02);
+    rightSensory.rotation.x = Math.PI / 2;
+    rightSensory.rotation.z = -0.35;
+    this.brainGroup.add(rightSensory);
+    
+    // === MAJOR FISSURES (Brown grooves) ===
+    const fissureMaterial = makeMaterial(colors.fissure);
+    
+    // Longitudinal fissure (between hemispheres)
+    const longFissure = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.012, scale * 0.45, scale * 0.8),
       fissureMaterial
     );
-    centralFissure.position.set(0, scale * 0.12, 0);
-    this.brainGroup.add(centralFissure);
+    longFissure.position.set(0, scale * 0.15, 0);
+    this.brainGroup.add(longFissure);
     
-    // === LATERAL FISSURES (Sylvian) ===
-    const leftLateral = new THREE.Mesh(
-      new THREE.BoxGeometry(scale * 0.22, scale * 0.012, scale * 0.35),
+    // Central sulcus (between frontal and parietal)
+    const leftCentral = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.18, scale * 0.01, scale * 0.015),
       fissureMaterial
     );
-    leftLateral.position.set(-scale * 0.25, scale * 0.0, scale * 0.12);
-    leftLateral.rotation.z = -0.25;
-    leftLateral.rotation.y = 0.15;
-    this.brainGroup.add(leftLateral);
+    leftCentral.position.set(-scale * 0.12, scale * 0.28, scale * 0.02);
+    leftCentral.rotation.z = -0.4;
+    this.brainGroup.add(leftCentral);
     
-    const rightLateral = new THREE.Mesh(
-      new THREE.BoxGeometry(scale * 0.22, scale * 0.012, scale * 0.35),
+    const rightCentral = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.18, scale * 0.01, scale * 0.015),
       fissureMaterial
     );
-    rightLateral.position.set(scale * 0.25, scale * 0.0, scale * 0.12);
-    rightLateral.rotation.z = 0.25;
-    rightLateral.rotation.y = -0.15;
-    this.brainGroup.add(rightLateral);
+    rightCentral.position.set(scale * 0.12, scale * 0.28, scale * 0.02);
+    rightCentral.rotation.z = 0.4;
+    this.brainGroup.add(rightCentral);
     
-    // === CEREBELLUM ===
-    const cerebellumMaterial = new THREE.MeshPhysicalMaterial({
-      color: cerebellumColor,
-      metalness: 0.0,
-      roughness: 0.85,
-    });
+    // Lateral (Sylvian) fissure
+    const leftSylvian = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.22, scale * 0.01, scale * 0.3),
+      fissureMaterial
+    );
+    leftSylvian.position.set(-scale * 0.24, scale * 0.02, scale * 0.1);
+    leftSylvian.rotation.z = -0.2;
+    leftSylvian.rotation.y = 0.15;
+    this.brainGroup.add(leftSylvian);
     
-    // Main cerebellum body
+    const rightSylvian = new THREE.Mesh(
+      new THREE.BoxGeometry(scale * 0.22, scale * 0.01, scale * 0.3),
+      fissureMaterial
+    );
+    rightSylvian.position.set(scale * 0.24, scale * 0.02, scale * 0.1);
+    rightSylvian.rotation.z = 0.2;
+    rightSylvian.rotation.y = -0.15;
+    this.brainGroup.add(rightSylvian);
+    
+    // === CEREBELLUM (Purple) - Coordination ===
+    const cerebellumMaterial = makeMaterial(colors.cerebellum);
+    
     const cerebellum = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.2, 32, 32),
+      new THREE.SphereGeometry(scale * 0.22, 32, 32),
       cerebellumMaterial
     );
-    cerebellum.position.set(0, -scale * 0.25, -scale * 0.35);
-    cerebellum.scale.set(1.5, 0.7, 0.9);
+    cerebellum.position.set(0, -scale * 0.22, -scale * 0.32);
+    cerebellum.scale.set(1.5, 0.65, 0.85);
     this.brainGroup.add(cerebellum);
     
-    // Cerebellar ridges (folia) - simplified
-    const ridgeMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xb09080,
-      metalness: 0.0,
-      roughness: 0.9,
-    });
+    // Cerebellar hemispheres
+    const leftCerebHemi = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.12, 24, 24),
+      cerebellumMaterial
+    );
+    leftCerebHemi.position.set(-scale * 0.18, -scale * 0.22, -scale * 0.28);
+    this.brainGroup.add(leftCerebHemi);
     
-    for (let i = 0; i < 4; i++) {
-      const ridge = new THREE.Mesh(
-        new THREE.TorusGeometry(scale * 0.16, scale * 0.006, 8, 24, Math.PI),
-        ridgeMaterial
+    const rightCerebHemi = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.12, 24, 24),
+      cerebellumMaterial
+    );
+    rightCerebHemi.position.set(scale * 0.18, -scale * 0.22, -scale * 0.28);
+    this.brainGroup.add(rightCerebHemi);
+    
+    // Cerebellar folia (ridges)
+    const foliaMaterial = makeMaterial(0x7A6B80);
+    for (let i = 0; i < 5; i++) {
+      const folia = new THREE.Mesh(
+        new THREE.TorusGeometry(scale * 0.18, scale * 0.005, 6, 20, Math.PI),
+        foliaMaterial
       );
-      ridge.position.set(0, -scale * 0.2 - i * scale * 0.03, -scale * 0.35);
-      ridge.rotation.x = Math.PI / 2;
-      ridge.scale.set(1.4, 1, 0.8);
-      this.brainGroup.add(ridge);
+      folia.position.set(0, -scale * 0.18 - i * scale * 0.025, -scale * 0.32);
+      folia.rotation.x = Math.PI / 2;
+      folia.scale.set(1.4, 1, 0.75);
+      this.brainGroup.add(folia);
     }
     
-    // === BRAINSTEM ===
-    const brainstemMaterial = new THREE.MeshPhysicalMaterial({
-      color: brainstemColor,
-      metalness: 0.0,
-      roughness: 0.8,
-    });
+    // === BRAINSTEM (Teal) - Vital functions ===
+    const brainstemMaterial = makeMaterial(colors.brainstem);
     
-    // Pons (bulge)
+    // Midbrain
+    const midbrain = new THREE.Mesh(
+      new THREE.CylinderGeometry(scale * 0.055, scale * 0.06, scale * 0.08, 16),
+      brainstemMaterial
+    );
+    midbrain.position.set(0, -scale * 0.32, -scale * 0.08);
+    midbrain.rotation.x = 0.2;
+    this.brainGroup.add(midbrain);
+    
+    // Pons
     const pons = new THREE.Mesh(
       new THREE.SphereGeometry(scale * 0.07, 24, 24),
       brainstemMaterial
     );
     pons.position.set(0, -scale * 0.38, -scale * 0.1);
-    pons.scale.set(1.0, 0.65, 1.1);
+    pons.scale.set(1.1, 0.6, 1.2);
     this.brainGroup.add(pons);
     
-    // Medulla (tapers down)
+    // Medulla oblongata
     const medulla = new THREE.Mesh(
-      new THREE.CylinderGeometry(scale * 0.035, scale * 0.05, scale * 0.18, 16),
+      new THREE.CylinderGeometry(scale * 0.035, scale * 0.05, scale * 0.15, 16),
       brainstemMaterial
     );
-    medulla.position.set(0, -scale * 0.5, -scale * 0.06);
+    medulla.position.set(0, -scale * 0.48, -scale * 0.06);
     medulla.rotation.x = 0.15;
     this.brainGroup.add(medulla);
     
-    // === CORPUS CALLOSUM (white matter bridge) ===
+    // === CORPUS CALLOSUM (White) - Connects hemispheres ===
     const corpusCallosum = new THREE.Mesh(
-      new THREE.TorusGeometry(scale * 0.18, scale * 0.03, 12, 24, Math.PI),
-      new THREE.MeshPhysicalMaterial({
-        color: whiteMatteColor,
-        metalness: 0.0,
-        roughness: 0.5,
-      })
+      new THREE.TorusGeometry(scale * 0.2, scale * 0.035, 12, 24, Math.PI),
+      makeMaterial(colors.whiteMatters)
     );
-    corpusCallosum.position.set(0, scale * 0.08, 0);
+    corpusCallosum.position.set(0, scale * 0.1, 0);
     corpusCallosum.rotation.y = Math.PI / 2;
     corpusCallosum.rotation.x = Math.PI;
-    corpusCallosum.scale.set(0.75, 1, 1.1);
+    corpusCallosum.scale.set(0.7, 1, 1.1);
     this.brainGroup.add(corpusCallosum);
     
-    // === DEEP STRUCTURES (subtle, semi-transparent) ===
-    const deepMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xd49888,
-      metalness: 0.0,
-      roughness: 0.7,
-      transparent: true,
-      opacity: 0.5,
-    });
+    // === LIMBIC SYSTEM (Salmon/Pink) - Emotions, memory ===
+    const limbicMaterial = makeMaterial(colors.limbic, 0.7);
     
-    // Thalamus
+    // Thalamus (egg-shaped relay station)
     const thalamus = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.07, 20, 20),
-      deepMaterial
+      new THREE.SphereGeometry(scale * 0.08, 20, 20),
+      limbicMaterial
     );
-    thalamus.position.set(0, -scale * 0.05, 0);
-    thalamus.scale.set(1.4, 0.9, 1.1);
+    thalamus.position.set(0, -scale * 0.04, 0);
+    thalamus.scale.set(1.5, 0.85, 1.1);
     this.brainGroup.add(thalamus);
     
     // Hypothalamus
     const hypothalamus = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.035, 16, 16),
-      deepMaterial
+      new THREE.SphereGeometry(scale * 0.04, 16, 16),
+      limbicMaterial
     );
-    hypothalamus.position.set(0, -scale * 0.16, scale * 0.06);
+    hypothalamus.position.set(0, -scale * 0.14, scale * 0.06);
     this.brainGroup.add(hypothalamus);
     
-    // Hippocampus (bilateral)
-    const hippoMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xd4a090,
-      metalness: 0.0,
-      roughness: 0.7,
-      transparent: true,
-      opacity: 0.55,
-    });
+    // Hippocampus (seahorse-shaped, bilateral)
+    const hippoMaterial = makeMaterial(0xE8A090, 0.75);
     
     const leftHippo = new THREE.Mesh(
-      new THREE.CapsuleGeometry(scale * 0.02, scale * 0.08, 6, 12),
+      new THREE.CapsuleGeometry(scale * 0.025, scale * 0.1, 8, 16),
       hippoMaterial
     );
-    leftHippo.position.set(-scale * 0.1, -scale * 0.13, scale * 0.02);
-    leftHippo.rotation.z = 0.4;
-    leftHippo.rotation.y = 0.25;
+    leftHippo.position.set(-scale * 0.11, -scale * 0.1, scale * 0.02);
+    leftHippo.rotation.z = 0.5;
+    leftHippo.rotation.y = 0.3;
     this.brainGroup.add(leftHippo);
     
     const rightHippo = new THREE.Mesh(
-      new THREE.CapsuleGeometry(scale * 0.02, scale * 0.08, 6, 12),
+      new THREE.CapsuleGeometry(scale * 0.025, scale * 0.1, 8, 16),
       hippoMaterial
     );
-    rightHippo.position.set(scale * 0.1, -scale * 0.13, scale * 0.02);
-    rightHippo.rotation.z = -0.4;
-    rightHippo.rotation.y = -0.25;
+    rightHippo.position.set(scale * 0.11, -scale * 0.1, scale * 0.02);
+    rightHippo.rotation.z = -0.5;
+    rightHippo.rotation.y = -0.3;
     this.brainGroup.add(rightHippo);
     
-    // Amygdala (bilateral)
+    // Amygdala (almond-shaped, bilateral)
+    const amygdalaMaterial = makeMaterial(0xD88070, 0.75);
+    
     const leftAmygdala = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.025, 12, 12),
-      hippoMaterial
+      new THREE.SphereGeometry(scale * 0.03, 16, 16),
+      amygdalaMaterial
     );
-    leftAmygdala.position.set(-scale * 0.15, -scale * 0.1, scale * 0.1);
-    leftAmygdala.scale.set(0.8, 1.1, 0.9);
+    leftAmygdala.position.set(-scale * 0.16, -scale * 0.08, scale * 0.1);
+    leftAmygdala.scale.set(0.7, 1.2, 0.9);
     this.brainGroup.add(leftAmygdala);
     
     const rightAmygdala = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.025, 12, 12),
-      hippoMaterial
+      new THREE.SphereGeometry(scale * 0.03, 16, 16),
+      amygdalaMaterial
     );
-    rightAmygdala.position.set(scale * 0.15, -scale * 0.1, scale * 0.1);
-    rightAmygdala.scale.set(0.8, 1.1, 0.9);
+    rightAmygdala.position.set(scale * 0.16, -scale * 0.08, scale * 0.1);
+    rightAmygdala.scale.set(0.7, 1.2, 0.9);
     this.brainGroup.add(rightAmygdala);
+    
+    // === BASAL GANGLIA (Gold) - Movement regulation ===
+    const basalMaterial = makeMaterial(colors.basalGanglia, 0.6);
+    
+    // Caudate nucleus (C-shaped)
+    const leftCaudate = new THREE.Mesh(
+      new THREE.TorusGeometry(scale * 0.08, scale * 0.02, 8, 16, Math.PI * 1.2),
+      basalMaterial
+    );
+    leftCaudate.position.set(-scale * 0.08, scale * 0.02, scale * 0.05);
+    leftCaudate.rotation.y = Math.PI / 4;
+    this.brainGroup.add(leftCaudate);
+    
+    const rightCaudate = new THREE.Mesh(
+      new THREE.TorusGeometry(scale * 0.08, scale * 0.02, 8, 16, Math.PI * 1.2),
+      basalMaterial
+    );
+    rightCaudate.position.set(scale * 0.08, scale * 0.02, scale * 0.05);
+    rightCaudate.rotation.y = -Math.PI / 4;
+    this.brainGroup.add(rightCaudate);
+    
+    // Putamen
+    const leftPutamen = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.04, 16, 16),
+      basalMaterial
+    );
+    leftPutamen.position.set(-scale * 0.12, -scale * 0.02, scale * 0.04);
+    leftPutamen.scale.set(0.7, 1.2, 1.0);
+    this.brainGroup.add(leftPutamen);
+    
+    const rightPutamen = new THREE.Mesh(
+      new THREE.SphereGeometry(scale * 0.04, 16, 16),
+      basalMaterial
+    );
+    rightPutamen.position.set(scale * 0.12, -scale * 0.02, scale * 0.04);
+    rightPutamen.scale.set(0.7, 1.2, 1.0);
+    this.brainGroup.add(rightPutamen);
+    
+    // === VENTRICLES (fluid-filled spaces, very transparent) ===
+    const ventricleMaterial = makeMaterial(0x87CEEB, 0.3);
+    
+    // Lateral ventricles
+    const leftVentricle = new THREE.Mesh(
+      new THREE.TorusGeometry(scale * 0.06, scale * 0.015, 8, 16, Math.PI * 1.5),
+      ventricleMaterial
+    );
+    leftVentricle.position.set(-scale * 0.06, scale * 0.02, 0);
+    leftVentricle.rotation.x = Math.PI / 2;
+    leftVentricle.rotation.z = 0.3;
+    this.brainGroup.add(leftVentricle);
+    
+    const rightVentricle = new THREE.Mesh(
+      new THREE.TorusGeometry(scale * 0.06, scale * 0.015, 8, 16, Math.PI * 1.5),
+      ventricleMaterial
+    );
+    rightVentricle.position.set(scale * 0.06, scale * 0.02, 0);
+    rightVentricle.rotation.x = Math.PI / 2;
+    rightVentricle.rotation.z = -0.3;
+    this.brainGroup.add(rightVentricle);
     
     this.mesh = this.brainGroup;
     
