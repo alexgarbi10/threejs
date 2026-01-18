@@ -428,23 +428,6 @@ class ThreeJSScene {
     rightHemisphere.scale.set(1.0, 0.85, 1.15);
     this.brainGroup.add(rightHemisphere);
     
-    // === FRONTAL LOBE BULGE ===
-    const leftFrontal = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.2, 32, 32),
-      cortexMaterial
-    );
-    leftFrontal.position.set(-scale * 0.14, scale * 0.08, scale * 0.38);
-    leftFrontal.scale.set(1.0, 0.85, 1.0);
-    this.brainGroup.add(leftFrontal);
-    
-    const rightFrontal = new THREE.Mesh(
-      new THREE.SphereGeometry(scale * 0.2, 32, 32),
-      cortexMaterial
-    );
-    rightFrontal.position.set(scale * 0.14, scale * 0.08, scale * 0.38);
-    rightFrontal.scale.set(1.0, 0.85, 1.0);
-    this.brainGroup.add(rightFrontal);
-    
     // === TEMPORAL LOBES ===
     const leftTemporal = new THREE.Mesh(
       new THREE.SphereGeometry(scale * 0.16, 32, 32),
