@@ -74,29 +74,29 @@ export const sceneConfig = {
       scale: 200,  // Scale factor for the model
       regions: [
         // CEREBRAL CORTEX - Four Lobes (positioned far outside the brain)
-        { name: 'Frontal Lobe', position: { x: 0, y: 180, z: 280 }, description: 'Planning, decision-making, personality, speech production' },
-        { name: 'Parietal Lobe', position: { x: 0, y: 250, z: -100 }, description: 'Sensory integration, spatial awareness, body position' },
-        { name: 'Temporal Lobe', position: { x: -300, y: -50, z: 60 }, description: 'Hearing, language comprehension, facial recognition' },
-        { name: 'Occipital Lobe', position: { x: 0, y: 100, z: -280 }, description: 'Visual processing, color and motion perception' },
+        { name: 'Frontal Lobe', position: { x: 0, y: 280, z: 450 }, description: 'Planning, decision-making, personality, speech production' },
+        { name: 'Parietal Lobe', position: { x: 0, y: 380, z: -150 }, description: 'Sensory integration, spatial awareness, body position' },
+        { name: 'Temporal Lobe', position: { x: -480, y: -80, z: 80 }, description: 'Hearing, language comprehension, facial recognition' },
+        { name: 'Occipital Lobe', position: { x: 0, y: 160, z: -450 }, description: 'Visual processing, color and motion perception' },
         
         // MOTOR & SENSORY CORTEX
-        { name: 'Motor Cortex', position: { x: 220, y: 200, z: 40 }, description: 'Precentral gyrus - voluntary movement control' },
-        { name: 'Sensory Cortex', position: { x: 240, y: 180, z: -60 }, description: 'Postcentral gyrus - touch, pain, proprioception' },
+        { name: 'Motor Cortex', position: { x: 380, y: 300, z: 60 }, description: 'Precentral gyrus - voluntary movement control' },
+        { name: 'Sensory Cortex', position: { x: 400, y: 260, z: -100 }, description: 'Postcentral gyrus - touch, pain, proprioception' },
         
         // CEREBELLUM
-        { name: 'Cerebellum', position: { x: 0, y: -160, z: -250 }, description: 'Coordination, balance, motor learning' },
+        { name: 'Cerebellum', position: { x: 0, y: -280, z: -400 }, description: 'Coordination, balance, motor learning' },
         
         // BRAINSTEM
-        { name: 'Brainstem', position: { x: 180, y: -180, z: -40 }, description: 'Midbrain, pons, medulla - vital autonomic functions' },
+        { name: 'Brainstem', position: { x: 300, y: -320, z: -60 }, description: 'Midbrain, pons, medulla - vital autonomic functions' },
         
         // LIMBIC SYSTEM (deep structures)
-        { name: 'Thalamus', position: { x: -250, y: 30, z: 40 }, description: 'Sensory relay hub - routes information to cortex' },
-        { name: 'Hypothalamus', position: { x: -250, y: -80, z: 100 }, description: 'Homeostasis, hunger, thirst, circadian rhythms' },
-        { name: 'Hippocampus', position: { x: -280, y: -60, z: 20 }, description: 'Memory consolidation, spatial navigation' },
-        { name: 'Amygdala', position: { x: -280, y: -50, z: 120 }, description: 'Emotional processing, fear response' },
+        { name: 'Thalamus', position: { x: -420, y: 50, z: 60 }, description: 'Sensory relay hub - routes information to cortex' },
+        { name: 'Hypothalamus', position: { x: -420, y: -120, z: 150 }, description: 'Homeostasis, hunger, thirst, circadian rhythms' },
+        { name: 'Hippocampus', position: { x: -450, y: -100, z: 30 }, description: 'Memory consolidation, spatial navigation' },
+        { name: 'Amygdala', position: { x: -450, y: -80, z: 180 }, description: 'Emotional processing, fear response' },
         
         // WHITE MATTER
-        { name: 'Corpus Callosum', position: { x: -260, y: 120, z: 0 }, description: 'Connects left and right hemispheres' },
+        { name: 'Corpus Callosum', position: { x: -420, y: 180, z: 0 }, description: 'Connects left and right hemispheres' },
       ],
       showLabels: true,
       labelStyle: 'floating',  // 'floating' or 'pointer'
@@ -162,8 +162,8 @@ export const sceneConfig = {
     // Camera position
     position: {
       x: 0,
-      y: 50,
-      z: 800,
+      y: 60,
+      z: 1100,
     },
     
     // Camera rotation (in radians)
