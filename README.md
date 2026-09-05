@@ -2,6 +2,10 @@
 
 Interactive WebGL brain model with labeled regions, built with [Three.js](https://threejs.org/) and Vite.
 
+**[Live demo](https://alexgarbi10.github.io/threejs/)**
+
+![3D brain with labeled regions](docs/preview.jpg)
+
 Inspired by Rita Carter's *The Human Brain Book*. Labels stay camera-facing via CSS2D; rotation is automatic. Drop in a GLTF model or use the procedural fallback.
 
 ## Stack
