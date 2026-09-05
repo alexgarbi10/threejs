@@ -97,7 +97,7 @@
   "bugs": {
     "url": "https://github.com/alexgarbi10/threejs/issues"
   },
-  "homepage": "https://alexgarbi10.github.io/threejs/",
+  "homepage": "https://github.com/alexgarbi10/threejs#readme",
   "private": false,
   "config": {
     "port": 9000,
