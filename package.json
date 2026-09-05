@@ -25,9 +25,7 @@
     "lint:fix": "eslint . --ext js,jsx --fix",
     "format": "prettier --write \"**/*.{js,jsx,json,css,html,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,json,css,html,md}\"",
-    "type-check": "echo 'TypeScript not configured yet'",
-    "clean": "rm -rf dist node_modules/.vite",
-    "prepublishOnly": "npm run build && npm test"
+    "clean": "rm -rf dist node_modules/.vite"
   },
   "dependencies": {
     "three": "^0.169.0"
@@ -44,9 +42,13 @@
   "peerDependencies": {},
   "optionalDependencies": {},
   "bundledDependencies": [],
+  "packageManager": "pnpm@10.28.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "pnpm": ">=10.0.0"
   },
   "os": [
     "darwin",
@@ -95,13 +97,8 @@
   "bugs": {
     "url": "https://github.com/alexgarbi10/threejs/issues"
   },
-  "homepage": "https://github.com/alexgarbi10/threejs#readme",
-  "funding": {},
+  "homepage": "https://alexgarbi10.github.io/threejs/",
   "private": false,
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
   "config": {
     "port": 9000,
     "open": true

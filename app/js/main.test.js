@@ -155,7 +155,22 @@ vi.mock('three', async () => {
 });
 
 import { ThreeJSScene } from './main.js';
+import sceneConfig from './config.js';
 import * as THREE from 'three';
+
+const torusConfig = {
+  ...sceneConfig,
+  geometry: {
+    ...sceneConfig.geometry,
+    type: 'torusKnot',
+  },
+};
+
+describe('Default configuration', () => {
+  it('uses the brain geometry by default', () => {
+    expect(sceneConfig.geometry.type).toBe('brain');
+  });
+});
 
 describe('ThreeJSScene', () => {
   let sceneInstance;
@@ -223,12 +238,12 @@ describe('ThreeJSScene', () => {
 
   describe('Initialization', () => {
     it('should create a ThreeJSScene instance', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(sceneInstance).toBeInstanceOf(ThreeJSScene);
     });
 
     it('should initialize all properties', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(sceneInstance.scene).toBeDefined();
       expect(sceneInstance.camera).toBeDefined();
       expect(sceneInstance.renderer).toBeDefined();
@@ -238,13 +253,13 @@ describe('ThreeJSScene', () => {
     });
 
     it('should create a Three.js Scene', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.Scene).toHaveBeenCalled();
       expect(sceneInstance.scene).toBe(mockScene);
     });
 
     it('should create a PerspectiveCamera with correct parameters', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.PerspectiveCamera).toHaveBeenCalledWith(
         75,
         window.innerWidth / window.innerHeight,
@@ -253,13 +268,13 @@ describe('ThreeJSScene', () => {
       );
     });
 
-    it('should set camera position z to 1000', () => {
-      sceneInstance = new ThreeJSScene();
-      expect(mockCamera.position.set).toHaveBeenCalledWith(0, 0, 1000);
+    it('should set camera position from config', () => {
+      sceneInstance = new ThreeJSScene(torusConfig);
+      expect(mockCamera.position.set).toHaveBeenCalledWith(0, 60, 1100);
     });
 
     it('should create a WebGLRenderer with antialias', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.WebGLRenderer).toHaveBeenCalledWith({
         antialias: true,
         alpha: false,
@@ -267,7 +282,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should set renderer size to window dimensions', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockRenderer.setSize).toHaveBeenCalledWith(
         window.innerWidth,
         window.innerHeight
@@ -275,33 +290,33 @@ describe('ThreeJSScene', () => {
     });
 
     it('should set renderer pixel ratio', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockRenderer.setPixelRatio).toHaveBeenCalledWith(
         window.devicePixelRatio
       );
     });
 
     it('should append renderer canvas to app div', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       const app = document.getElementById('app');
       expect(app.contains(mockRenderer.domElement)).toBe(true);
     });
 
     it('should append renderer canvas to body if app div does not exist', () => {
       document.body.innerHTML = '';
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(document.body.contains(mockRenderer.domElement)).toBe(true);
     });
   });
 
   describe('Mesh Creation', () => {
     it('should create a TorusKnotGeometry with correct parameters', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.TorusKnotGeometry).toHaveBeenCalledWith(200, 60, 100, 16, 2, 3);
     });
 
     it('should create a MeshBasicMaterial with texture', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.MeshBasicMaterial).toHaveBeenCalledWith(
         expect.objectContaining({
           map: mockTexture,
@@ -314,38 +329,38 @@ describe('ThreeJSScene', () => {
     });
 
     it('should create a Mesh from geometry and material', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.Mesh).toHaveBeenCalled();
     });
 
     it('should add mesh to the scene', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockScene.add).toHaveBeenCalledWith(mockTorusMesh);
     });
 
     it('should use mesh property instead of torusMesh', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(sceneInstance.mesh).toBe(mockTorusMesh);
     });
   });
 
   describe('Texture Loading', () => {
     it('should create a TextureLoader', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.TextureLoader).toHaveBeenCalled();
     });
 
     it('should load texture from URL', () => {
       const textureURL =
         'https://images.pexels.com/photos/235994/pexels-photo-235994.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260';
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockTextureLoader.load).toHaveBeenCalledWith(textureURL);
     });
   });
 
   describe('Lighting', () => {
     it('should create a SpotLight with white color', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(THREE.SpotLight).toHaveBeenCalledWith(
         0xffffff,
         1.0,
@@ -357,37 +372,37 @@ describe('ThreeJSScene', () => {
     });
 
     it('should enable shadow casting on light', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockLight.castShadow).toBe(true);
     });
 
     it('should configure shadow map size', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockLight.shadow.mapSize.width).toBe(1024);
       expect(mockLight.shadow.mapSize.height).toBe(1024);
     });
 
     it('should configure shadow camera properties', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockLight.shadow.camera.near).toBe(500);
       expect(mockLight.shadow.camera.far).toBe(4000);
       expect(mockLight.shadow.camera.fov).toBe(30);
     });
 
     it('should add light to the scene', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockScene.add).toHaveBeenCalledWith(mockLight);
     });
   });
 
   describe('Animation', () => {
     it('should start animation loop on construction', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(mockRequestAnimationFrame).toHaveBeenCalled();
     });
 
     it('should update mesh rotation in animation loop', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       const initialX = mockTorusMesh.rotation.x;
       const initialY = mockTorusMesh.rotation.y;
 
@@ -395,12 +410,14 @@ describe('ThreeJSScene', () => {
       const animateCallback = mockRequestAnimationFrame.mock.calls[0][0];
       animateCallback();
 
-      expect(mockTorusMesh.rotation.x).toBe(initialX + 0.01);
-      expect(mockTorusMesh.rotation.y).toBe(initialY + 0.01);
+      const { x, y } = torusConfig.animation.rotation;
+      const speed = torusConfig.animation.speed;
+      expect(mockTorusMesh.rotation.x).toBe(initialX + x * speed);
+      expect(mockTorusMesh.rotation.y).toBe(initialY + y * speed);
     });
 
     it('should call renderer.render in animation loop', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       const animateCallback = mockRequestAnimationFrame.mock.calls[0][0];
       animateCallback();
 
@@ -408,7 +425,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should continue animation loop recursively', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       const firstCallback = mockRequestAnimationFrame.mock.calls[0][0];
 
       // First frame
@@ -417,7 +434,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should not update rotation if mesh is null', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.mesh = null;
       const animateCallback = mockRequestAnimationFrame.mock.calls[0][0];
 
@@ -425,7 +442,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should not render if renderer, scene, or camera is null', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       const initialRenderCount = mockRenderer.render.mock.calls.length;
       sceneInstance.renderer = null;
       const animateCallback = mockRequestAnimationFrame.mock.calls[0][0];
@@ -437,13 +454,13 @@ describe('ThreeJSScene', () => {
 
   describe('Resize Handling', () => {
     it('should register resize event listener', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       expect(sceneInstance.resizeHandler).toBeDefined();
       expect(typeof sceneInstance.resizeHandler).toBe('function');
     });
 
     it('should update camera aspect on resize', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       // Get initial call count
       const initialCallCount = mockCamera.updateProjectionMatrix.mock.calls.length;
       
@@ -458,7 +475,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should update renderer size on resize', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       window.innerWidth = 1600;
       window.innerHeight = 900;
 
@@ -468,7 +485,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should handle resize when camera is null', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.camera = null;
       window.innerWidth = 1600;
       window.innerHeight = 900;
@@ -477,7 +494,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should handle resize when renderer is null', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.renderer = null;
       window.innerWidth = 1600;
       window.innerHeight = 900;
@@ -488,7 +505,7 @@ describe('ThreeJSScene', () => {
 
   describe('Cleanup', () => {
     it('should cancel animation frame on dispose', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.animationId = 123;
       sceneInstance.dispose();
 
@@ -496,21 +513,21 @@ describe('ThreeJSScene', () => {
     });
 
     it('should dispose renderer on cleanup', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.dispose();
 
       expect(mockRenderer.dispose).toHaveBeenCalled();
     });
 
     it('should handle dispose when animationId is null', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.animationId = null;
 
       expect(() => sceneInstance.dispose()).not.toThrow();
     });
 
     it('should handle dispose when renderer is null', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.renderer = null;
 
       expect(() => sceneInstance.dispose()).not.toThrow();
@@ -518,7 +535,7 @@ describe('ThreeJSScene', () => {
 
     it('should remove resize event listener on dispose', () => {
       const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       sceneInstance.dispose();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
@@ -531,7 +548,7 @@ describe('ThreeJSScene', () => {
 
   describe('Integration', () => {
     it('should initialize all components in correct order', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
 
       const sceneCallOrder = THREE.Scene.mock.invocationCallOrder[0];
       const cameraCallOrder = THREE.PerspectiveCamera.mock.invocationCallOrder[0];
@@ -548,7 +565,7 @@ describe('ThreeJSScene', () => {
     });
 
     it('should maintain animation state across multiple frames', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
       const initialRotationX = mockTorusMesh.rotation.x;
 
       let callback = mockRequestAnimationFrame.mock.calls[0][0];
@@ -559,11 +576,12 @@ describe('ThreeJSScene', () => {
         }
       }
 
-      expect(mockTorusMesh.rotation.x).toBe(initialRotationX + 0.05);
+      const step = torusConfig.animation.rotation.x * torusConfig.animation.speed;
+      expect(mockTorusMesh.rotation.x).toBe(initialRotationX + step * 5);
     });
 
     it('should handle full lifecycle: init, animate, resize, dispose', () => {
-      sceneInstance = new ThreeJSScene();
+      sceneInstance = new ThreeJSScene(torusConfig);
 
       expect(sceneInstance.scene).toBeDefined();
       expect(sceneInstance.camera).toBeDefined();
